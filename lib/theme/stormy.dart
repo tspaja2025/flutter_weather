@@ -93,7 +93,7 @@ class StormyTheme {
 
   static TextTheme textTheme = const TextTheme(
     displayLarge: TextStyle(
-      fontFamily: 'Plus Jakarta Sans',
+      fontFamily: 'NotoSans',
       fontSize: 48,
       fontWeight: FontWeight.w800,
       height: 56 / 48,
@@ -101,7 +101,7 @@ class StormyTheme {
     ),
 
     headlineLarge: TextStyle(
-      fontFamily: 'Plus Jakarta Sans',
+      fontFamily: 'NotoSans',
       fontSize: 32,
       fontWeight: FontWeight.w700,
       height: 40 / 32,
@@ -109,28 +109,28 @@ class StormyTheme {
     ),
 
     titleMedium: TextStyle(
-      fontFamily: 'Plus Jakarta Sans',
+      fontFamily: 'NotoSans',
       fontSize: 20,
       fontWeight: FontWeight.w600,
       height: 28 / 20,
     ),
 
     bodyLarge: TextStyle(
-      fontFamily: 'Plus Jakarta Sans',
+      fontFamily: 'NotoSans',
       fontSize: 16,
       fontWeight: FontWeight.w400,
       height: 24 / 16,
     ),
 
     bodyMedium: TextStyle(
-      fontFamily: 'Plus Jakarta Sans',
+      fontFamily: 'NotoSans',
       fontSize: 14,
       fontWeight: FontWeight.w400,
       height: 20 / 14,
     ),
 
     labelMedium: TextStyle(
-      fontFamily: 'Plus Jakarta Sans',
+      fontFamily: 'NotoSans',
       fontSize: 12,
       fontWeight: FontWeight.w600,
       height: 16 / 12,
@@ -234,10 +234,7 @@ class StormyTheme {
       chipTheme: ChipThemeData(
         backgroundColor: surfaceContainerHigh,
         selectedColor: secondary,
-        labelStyle: const TextStyle(
-          color: onSurface,
-          fontFamily: 'Plus Jakarta Sans',
-        ),
+        labelStyle: const TextStyle(color: onSurface, fontFamily: 'NotoSans'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
 
@@ -270,7 +267,7 @@ class StormyTheme {
         backgroundColor: surfaceContainerLowest,
         indicatorColor: primary.withValues(alpha: .18),
         labelTextStyle: WidgetStateProperty.all(
-          const TextStyle(fontFamily: 'Plus Jakarta Sans'),
+          const TextStyle(fontFamily: 'NotoSans'),
         ),
       ),
     );
