@@ -28,13 +28,17 @@ class CitiesScreen extends StatelessWidget {
           ),
         ),
 
+        const SizedBox(height: 16),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('MY CITIES'),
+            Text('MY CITIES', style: Theme.of(context).textTheme.labelMedium),
             TextButton(onPressed: () {}, child: const Text('Edit')),
           ],
         ),
+
+        const SizedBox(height: 8),
 
         CityCard(
           city: 'New York',
@@ -46,6 +50,8 @@ class CitiesScreen extends StatelessWidget {
           low: 14,
         ),
 
+        const SizedBox(height: 8),
+
         CityCard(
           city: 'London',
           time: '02:42 PM',
@@ -55,6 +61,8 @@ class CitiesScreen extends StatelessWidget {
           high: 15,
           low: 11,
         ),
+
+        const SizedBox(height: 8),
 
         CityCard(
           city: 'Tokyo',
@@ -66,11 +74,14 @@ class CitiesScreen extends StatelessWidget {
           low: 19,
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
 
-        const Text('RECOMMENDED CITIES'),
+        Text(
+          'RECOMMENDED CITIES',
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -92,8 +103,8 @@ class CityCard extends StatelessWidget {
   final String weather;
   final IconData weatherIcon;
   final double temperature;
-  final double high;
-  final double low;
+  final int high;
+  final int low;
 
   const CityCard({
     super.key,
@@ -110,8 +121,9 @@ class CityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadiusGeometry.circular(18),
+        borderRadius: BorderRadius.circular(18),
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Row(
