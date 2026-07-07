@@ -28,7 +28,7 @@ class DailyForecastRow extends StatelessWidget {
             width: 60,
             child: Text(day, style: Theme.of(context).textTheme.bodyMedium),
           ),
-          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          Icon(icon, fill: 1, color: Theme.of(context).colorScheme.primary),
           const Spacer(),
           Text('$low°', style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(width: 20),

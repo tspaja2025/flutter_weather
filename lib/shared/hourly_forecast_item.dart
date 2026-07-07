@@ -19,7 +19,7 @@ class HourlyForecastItem extends StatelessWidget {
         children: [
           Text(time, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 8),
-          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          Icon(icon, fill: 1, color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 8),
           Text(
             temperature,

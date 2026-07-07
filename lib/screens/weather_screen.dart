@@ -160,7 +160,7 @@ class WeatherScreen extends StatelessWidget {
               ),
               Expanded(
                 child: MetricCard(
-                  icon: Symbols.water_drop,
+                  icon: Symbols.visibility,
                   title: 'VISIBILITY',
                   value: const Row(
                     children: [Text('10'), SizedBox(width: 4), Text('mi')],
