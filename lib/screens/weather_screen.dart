@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_weather/shared/daily_forecast_row.dart';
+import 'package:flutter_weather/shared/hourly_forecast_item.dart';
+import 'package:flutter_weather/shared/metric_card.dart';
+import 'package:flutter_weather/shared/weather_card.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class WeatherScreen extends StatelessWidget {
@@ -18,9 +22,14 @@ class WeatherScreen extends StatelessWidget {
               ),
               Text(
                 'San Francisco',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.headlineLarge,
               ),
-              Text('72°', style: Theme.of(context).textTheme.displayLarge),
+              Text(
+                '72°',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
               Text(
                 'Mostly Sunny',
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -48,9 +57,7 @@ class WeatherScreen extends StatelessWidget {
                 children: [
                   Text(
                     'HOURLY FORECAST',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                    style: Theme.of(context).textTheme.labelMedium,
                   ),
                   Icon(
                     Symbols.access_time,
@@ -63,22 +70,26 @@ class WeatherScreen extends StatelessWidget {
 
               Row(
                 children: [
-                  HourForecast(
+                  HourlyForecastItem(
                     time: 'Now',
-                    icon: Symbols.wb_sunny,
-                    temp: '72°',
+                    icon: Symbols.sunny,
+                    temperature: '72°',
                   ),
-                  HourForecast(
+                  HourlyForecastItem(
                     time: '1PM',
                     icon: Symbols.partly_cloudy_day,
-                    temp: '74°',
+                    temperature: '74°',
                   ),
-                  HourForecast(
+                  HourlyForecastItem(
                     time: '2PM',
                     icon: Symbols.partly_cloudy_day,
-                    temp: '75°',
+                    temperature: '75°',
                   ),
-                  HourForecast(time: '3PM', icon: Symbols.cloud, temp: '73°'),
+                  HourlyForecastItem(
+                    time: '3PM',
+                    icon: Symbols.cloud,
+                    temperature: '73°',
+                  ),
                 ],
               ),
             ],
@@ -88,27 +99,18 @@ class WeatherScreen extends StatelessWidget {
         const SizedBox(height: 16),
 
         Row(
+          spacing: 16,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: MetricCard(
                 icon: Symbols.sunny,
                 title: 'UV INDEX',
-                value: Text(
-                  '4',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
+                value: const Text('4'),
                 footer: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Moderate',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
+                    const Text('Moderate'),
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
                       value: 0.4,
@@ -125,72 +127,34 @@ class WeatherScreen extends StatelessWidget {
               child: MetricCard(
                 icon: Symbols.air,
                 title: 'WIND',
-                value: Text(
-                  '64%',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                footer: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'WNW',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Icon(Symbols.circle),
-                  ],
-                ),
+                value: const Text('12 mph'),
+                footer: const Text('WNW 8 mph'),
               ),
             ),
           ],
         ),
 
+        const SizedBox(height: 16),
+
         Row(
+          spacing: 16,
           children: [
             Expanded(
               child: MetricCard(
                 icon: Symbols.water_drop,
                 title: 'HUMIDITY',
-                value: Text(
-                  '64%',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                footer: Text(
-                  'Dew point 58°',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
+                value: const Text('64%'),
+                footer: const Text('Dew point 58°'),
               ),
             ),
             Expanded(
               child: MetricCard(
                 icon: Symbols.water_drop,
                 title: 'VISIBILITY',
-                value: Row(
-                  children: [
-                    Text(
-                      '10',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Text('mi'),
-                  ],
+                value: const Row(
+                  children: [Text('10'), SizedBox(width: 4), Text('mi')],
                 ),
-                footer: Text(
-                  'Clear view',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
+                footer: const Text('Clear view'),
               ),
             ),
           ],
@@ -206,14 +170,12 @@ class WeatherScreen extends StatelessWidget {
                 children: [
                   Icon(
                     Symbols.calendar_month,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     '10-DAY FORECAST',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                    style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ],
               ),
@@ -225,6 +187,8 @@ class WeatherScreen extends StatelessWidget {
                 icon: Symbols.partly_cloudy_day,
                 low: 64,
                 high: 78,
+                progressStart: .30,
+                progressEnd: .72,
               ),
               const Divider(),
               DailyForecastRow(
@@ -232,6 +196,8 @@ class WeatherScreen extends StatelessWidget {
                 icon: Symbols.sunny,
                 low: 62,
                 high: 81,
+                progressStart: .28,
+                progressEnd: .75,
               ),
               const Divider(),
               DailyForecastRow(
@@ -239,6 +205,8 @@ class WeatherScreen extends StatelessWidget {
                 icon: Symbols.cloud,
                 low: 60,
                 high: 74,
+                progressStart: .26,
+                progressEnd: .68,
               ),
               const Divider(),
               DailyForecastRow(
@@ -246,126 +214,13 @@ class WeatherScreen extends StatelessWidget {
                 icon: Symbols.rainy,
                 low: 58,
                 high: 68,
+                progressStart: .24,
+                progressEnd: .60,
               ),
             ],
           ),
         ),
       ],
-    );
-  }
-}
-
-class WeatherCard extends StatelessWidget {
-  final Widget child;
-
-  const WeatherCard({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadiusGeometry.circular(18),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Padding(padding: const EdgeInsets.all(16), child: child),
-    );
-  }
-}
-
-class HourForecast extends StatelessWidget {
-  final String time;
-  final IconData icon;
-  final String temp;
-
-  const HourForecast({
-    super.key,
-    required this.time,
-    required this.icon,
-    required this.temp,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(time),
-          const SizedBox(height: 8),
-          Icon(icon),
-          const SizedBox(height: 8),
-          Text(temp, style: const TextStyle(fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
-class MetricCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final Widget value;
-  final Widget footer;
-
-  const MetricCard({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.footer,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return WeatherCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16),
-              const SizedBox(width: 6),
-              Text(title),
-            ],
-          ),
-          const SizedBox(height: 12),
-          value,
-          const SizedBox(height: 8),
-          footer,
-        ],
-      ),
-    );
-  }
-}
-
-class DailyForecastRow extends StatelessWidget {
-  final String day;
-  final IconData icon;
-  final int low;
-  final int high;
-
-  const DailyForecastRow({
-    super.key,
-    required this.day,
-    required this.icon,
-    required this.low,
-    required this.high,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          SizedBox(width: 60, child: Text(day)),
-          Icon(icon),
-          const Spacer(),
-          Text('$low°'),
-          const SizedBox(width: 20),
-          Text('$high°', style: const TextStyle(fontWeight: FontWeight.bold)),
-        ],
-      ),
     );
   }
 }
