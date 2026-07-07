@@ -61,11 +61,7 @@ class _AppScaffoldState extends State<AppScaffold> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: SafeArea(child: widget.child),
-      ),
+      body: widget.child,
     );
   }
 }

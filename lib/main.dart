@@ -18,11 +18,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Weather',
-      theme: ThemeData(
-        colorScheme: StormyTheme.colorScheme,
-        textTheme: StormyTheme.textTheme,
-        fontFamily: 'NotoSans',
-      ),
+      theme: StormyTheme.dark(),
       themeMode: ThemeMode.dark,
       routerConfig: GoRouter(
         initialLocation: '/',

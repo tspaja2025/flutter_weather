@@ -6,93 +6,97 @@ class CitiesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Manage Cities',
-          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        SizedBox(
-          width: double.infinity,
-          child: TextField(
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              prefixIcon: const Icon(Symbols.search),
-              hintText: 'Search for a city...',
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Manage Cities',
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
-        ),
+          const SizedBox(height: 16),
 
-        const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Symbols.search),
+                hintText: 'Search for a city...',
+              ),
+            ),
+          ),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('MY CITIES', style: Theme.of(context).textTheme.labelMedium),
-            TextButton(onPressed: () {}, child: const Text('Edit')),
-          ],
-        ),
+          const SizedBox(height: 16),
 
-        const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('MY CITIES', style: Theme.of(context).textTheme.labelMedium),
+              TextButton(onPressed: () {}, child: const Text('Edit')),
+            ],
+          ),
 
-        CityCard(
-          city: 'New York',
-          time: '09:42 AM',
-          weather: 'Cloudy',
-          weatherIcon: Symbols.cloud,
-          temperature: 18,
-          high: 21,
-          low: 14,
-        ),
+          const SizedBox(height: 8),
 
-        const SizedBox(height: 8),
+          CityCard(
+            city: 'New York',
+            time: '09:42 AM',
+            weather: 'Cloudy',
+            weatherIcon: Symbols.cloud,
+            temperature: 18,
+            high: 21,
+            low: 14,
+          ),
 
-        CityCard(
-          city: 'London',
-          time: '02:42 PM',
-          weather: 'Light Rain',
-          weatherIcon: Symbols.rainy,
-          temperature: 12,
-          high: 15,
-          low: 11,
-        ),
+          const SizedBox(height: 8),
 
-        const SizedBox(height: 8),
+          CityCard(
+            city: 'London',
+            time: '02:42 PM',
+            weather: 'Light Rain',
+            weatherIcon: Symbols.rainy,
+            temperature: 12,
+            high: 15,
+            low: 11,
+          ),
 
-        CityCard(
-          city: 'Tokyo',
-          time: '10:42 PM',
-          weather: 'Clear',
-          weatherIcon: Symbols.sunny,
-          temperature: 24,
-          high: 28,
-          low: 19,
-        ),
+          const SizedBox(height: 8),
 
-        const SizedBox(height: 24),
+          CityCard(
+            city: 'Tokyo',
+            time: '10:42 PM',
+            weather: 'Clear',
+            weatherIcon: Symbols.sunny,
+            temperature: 24,
+            high: 28,
+            low: 19,
+          ),
 
-        Text(
-          'RECOMMENDED CITIES',
-          style: Theme.of(context).textTheme.labelMedium,
-        ),
+          const SizedBox(height: 24),
 
-        const SizedBox(height: 12),
+          Text(
+            'RECOMMENDED CITIES',
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            OutlinedButton(onPressed: () {}, child: const Text('Paris')),
-            OutlinedButton(onPressed: () {}, child: const Text('Berlin')),
-            OutlinedButton(onPressed: () {}, child: const Text('Sydney')),
-            OutlinedButton(onPressed: () {}, child: const Text('Dubai')),
-          ],
-        ),
-      ],
+          const SizedBox(height: 12),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              OutlinedButton(onPressed: () {}, child: const Text('Paris')),
+              OutlinedButton(onPressed: () {}, child: const Text('Berlin')),
+              OutlinedButton(onPressed: () {}, child: const Text('Sydney')),
+              OutlinedButton(onPressed: () {}, child: const Text('Dubai')),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
