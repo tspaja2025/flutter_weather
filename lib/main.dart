@@ -5,8 +5,10 @@ import 'package:flutter_weather/screens/weather_screen.dart';
 import 'package:flutter_weather/shared/app_scaffold.dart';
 import 'package:flutter_weather/theme/stormy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  await dotenv.load();
   runApp(const MyApp());
 }
 
