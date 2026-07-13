@@ -41,4 +41,19 @@ class WeatherService {
     final forecast = await getForecast(city);
     return {...current, 'forecast': forecast['forecast']};
   }
+
+  // Get weather data for multiple cities
+  Future<List<Map<String, dynamic>>> getMultipleCitiesWeather(
+    List<String> cities,
+  ) async {
+    final List<Future<Map<String, dynamic>>> futures = cities
+        .map((city) => getWeatherData(city))
+        .toList();
+
+    return await Future.wait(futures);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllweather(List<String> cities) async {
+    return await Future.wait(cities.map((city) => getWeatherData(city)));
+  }
 }

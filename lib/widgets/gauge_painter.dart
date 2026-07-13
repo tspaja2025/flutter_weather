@@ -46,7 +46,7 @@ class GaugePainter extends CustomPainter {
 }
 
 class GaugePainter2 extends CustomPainter {
-  final int activeTicks;
+  final double activeTicks;
 
   GaugePainter2(this.activeTicks);
 
