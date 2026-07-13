@@ -18,10 +18,15 @@ class _AppScaffoldState extends State<AppScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: () {}, icon: const Icon(Symbols.menu)),
         title: const Text('SkyGlass'),
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Symbols.search)),
+          IconButton(
+            onPressed: () {
+              context.go('/settings');
+            },
+            icon: const Icon(Symbols.settings),
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(

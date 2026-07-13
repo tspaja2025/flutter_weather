@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_weather/screens/cities_screen.dart';
 import 'package:flutter_weather/screens/forecast_screen.dart';
+import 'package:flutter_weather/screens/settings_screen.dart';
 import 'package:flutter_weather/screens/weather_screen.dart';
 import 'package:flutter_weather/shared/app_scaffold.dart';
 import 'package:flutter_weather/theme/stormy.dart';
@@ -41,6 +42,10 @@ class MyApp extends StatelessWidget {
                 builder: (context, state) => const CitiesScreen(),
               ),
             ],
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
           ),
         ],
       ),
