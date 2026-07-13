@@ -23,7 +23,7 @@ class WeatherService {
   // Get forecast weather
   Future<Map<String, dynamic>> getForecast(String city) async {
     final url = Uri.parse(
-      'https://api.weatherapi.com/v1/forecast.json?key=$_apiKey&q=$city&days=3',
+      'https://api.weatherapi.com/v1/forecast.json?key=$_apiKey&q=$city&days=7',
     );
     final response = await http.get(url);
     if (response.statusCode == 200) {

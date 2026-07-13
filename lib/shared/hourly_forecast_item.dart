@@ -14,7 +14,8 @@ class HourlyForecastItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return SizedBox(
+      width: 70,
       child: Column(
         children: [
           Text(time, style: Theme.of(context).textTheme.bodySmall),
