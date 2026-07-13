@@ -196,31 +196,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
                         },
                       ),
                     ),
-
-                    // Row(
-                    //   children: [
-                    //     HourlyForecastItem(
-                    //       time: 'Now',
-                    //       icon: Symbols.sunny,
-                    //       temperature: '72°',
-                    //     ),
-                    //     HourlyForecastItem(
-                    //       time: '1PM',
-                    //       icon: Symbols.partly_cloudy_day,
-                    //       temperature: '74°',
-                    //     ),
-                    //     HourlyForecastItem(
-                    //       time: '2PM',
-                    //       icon: Symbols.partly_cloudy_day,
-                    //       temperature: '75°',
-                    //     ),
-                    //     HourlyForecastItem(
-                    //       time: '3PM',
-                    //       icon: Symbols.cloud,
-                    //       temperature: '73°',
-                    //     ),
-                    //   ],
-                    // ),
                   ],
                 ),
               ),
@@ -286,118 +261,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: _buildTemperatureBars(),
-                          // children: [
-                          //   Container(
-                          //     width: 8,
-                          //     height: 15,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 20,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 25,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 30,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 35,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 35,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 30,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 25,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 20,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 15,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ],
                         ),
                       ],
                     ),
@@ -827,107 +690,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: _buildVisibilityBars(visibility),
-                          // children: [
-                          //   Container(
-                          //     width: 8,
-                          //     height: 15,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 20,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 25,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 30,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 35,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 40,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 45,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 50,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.blue,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          //   Container(
-                          //     width: 8,
-                          //     height: 55,
-                          //     decoration: BoxDecoration(
-                          //       color: Colors.grey.shade300,
-                          //       borderRadius: BorderRadius.vertical(
-                          //         top: Radius.circular(12),
-                          //         bottom: Radius.circular(12),
-                          //       ),
-                          //     ),
-                          //   ),
-                          // ],
                         ),
                       ],
                     ),
@@ -1131,42 +893,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
                         ],
                       );
                     }).toList(),
-
-                    // DailyForecastRow(
-                    //   day: 'Today',
-                    //   icon: Symbols.partly_cloudy_day,
-                    //   low: 64,
-                    //   high: 78,
-                    //   progressStart: .30,
-                    //   progressEnd: .72,
-                    // ),
-                    // const Divider(),
-                    // DailyForecastRow(
-                    //   day: 'Tue',
-                    //   icon: Symbols.sunny,
-                    //   low: 62,
-                    //   high: 81,
-                    //   progressStart: .28,
-                    //   progressEnd: .75,
-                    // ),
-                    // const Divider(),
-                    // DailyForecastRow(
-                    //   day: 'Wed',
-                    //   icon: Symbols.cloud,
-                    //   low: 60,
-                    //   high: 74,
-                    //   progressStart: .26,
-                    //   progressEnd: .68,
-                    // ),
-                    // const Divider(),
-                    // DailyForecastRow(
-                    //   day: 'Thu',
-                    //   icon: Symbols.rainy,
-                    //   low: 58,
-                    //   high: 68,
-                    //   progressStart: .24,
-                    //   progressEnd: .60,
-                    // ),
                   ],
                 ),
               ),
@@ -1236,21 +962,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }
 
   double _calculateSunPosition(String sunrise, String sunset) {
-    final sunriseTime = DateTime.parse(sunrise);
-    final sunsetTime = DateTime.parse(sunset);
     final now = DateTime.now();
-    final totalDuration = sunsetTime.difference(sunriseTime).inSeconds;
-    final elapsedDuration = now.difference(sunriseTime).inSeconds;
-    return elapsedDuration / totalDuration;
+    final totalDaySeconds = 24 * 3600;
+    final currentSeconds = now.hour * 3600 + now.minute * 60;
+    return (currentSeconds / totalDaySeconds).clamp(0.0, 1.0);
   }
 
   double _calculateMoonPosition(String moonRise, String moonSet) {
-    final moonRiseTime = DateTime.parse(moonRise);
-    final moonSetTime = DateTime.parse(moonSet);
     final now = DateTime.now();
-    final totalDuration = moonSetTime.difference(moonRiseTime).inSeconds;
-    final elapsedDuration = now.difference(moonRiseTime).inSeconds;
-    return elapsedDuration / totalDuration;
+    final totalDaySeconds = 24 * 3600;
+    final currentSeconds = now.hour * 3600 + now.minute * 60;
+    return (currentSeconds / totalDaySeconds).clamp(0.0, 1.0);
   }
 
   IconData _getMoonPhaseIcon(String phase) {
