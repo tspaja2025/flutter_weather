@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
 class SunMoonPathPainter extends CustomPainter {
-  final double startProgress;
-  final double endProgress;
+  final double progress;
   final Color color;
 
-  SunMoonPathPainter(this.startProgress, this.endProgress, this.color);
+  SunMoonPathPainter(this.progress, this.color);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -34,30 +33,13 @@ class SunMoonPathPainter extends CustomPainter {
     canvas.drawCircle(Offset(size.width - 20, size.height - 8), 3, dotPaint);
 
     final metric = path.computeMetrics().first;
-    final startTangent = metric.getTangentForOffset(
-      metric.length * startProgress.clamp(0.0, 1.0),
-    );
-    final endTangent = metric.getTangentForOffset(
-      metric.length * endProgress.clamp(0.0, 1.0),
-    );
+    final tangent = metric.getTangentForOffset(metric.length * progress)!;
 
-    if (startTangent != null) {
-      canvas.drawCircle(
-        startTangent.position,
-        10,
-        Paint()..color = Colors.amber,
-      );
-    }
-
-    if (endTangent != null) {
-      canvas.drawCircle(endTangent.position, 10, Paint()..color = color);
-    }
+    canvas.drawCircle(tangent.position, 10, Paint()..color = color);
   }
 
   @override
   bool shouldRepaint(covariant SunMoonPathPainter oldDelegate) {
-    return startProgress != oldDelegate.startProgress ||
-        endProgress != oldDelegate.endProgress ||
-        color != oldDelegate.color;
+    return progress != oldDelegate.progress || color != oldDelegate.color;
   }
 }

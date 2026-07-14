@@ -14,21 +14,13 @@ class AppScaffold extends StatefulWidget {
 class _AppScaffoldState extends State<AppScaffold> {
   int _selectedIndex = 0;
 
+  Future<void> _refresh() async {
+    await Future.delayed(const Duration(seconds: 2));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('SkyGlass'),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Symbols.search)),
-          IconButton(
-            onPressed: () {
-              context.go('/settings');
-            },
-            icon: const Icon(Symbols.settings),
-          ),
-        ],
-      ),
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (index) {
           setState(() {
@@ -43,6 +35,9 @@ class _AppScaffoldState extends State<AppScaffold> {
               break;
             case 2:
               context.go('/cities');
+              break;
+            case 3:
+              context.go('/settings');
               break;
           }
         },
@@ -64,7 +59,42 @@ class _AppScaffoldState extends State<AppScaffold> {
             icon: Icon(Symbols.location_on),
             label: 'Cities',
           ),
+          NavigationDestination(
+            selectedIcon: Icon(Symbols.settings, fill: 1),
+            icon: Icon(Symbols.settings),
+            label: 'Settings',
+          ),
         ],
+      ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.miniCenterDocked,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Search'),
+                content: TextField(
+                  decoration: InputDecoration(hintText: 'Search city'),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, 'Cancel'),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, 'OK'),
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        mini: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        child: const Icon(Symbols.search),
       ),
       body: widget.child,
     );

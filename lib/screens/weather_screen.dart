@@ -3,6 +3,7 @@ import 'package:flutter_weather/service/weather_service.dart';
 import 'package:flutter_weather/shared/hourly_forecast_item.dart';
 import 'package:flutter_weather/shared/weather_card.dart';
 import 'package:flutter_weather/shared/weather_utils.dart';
+import 'package:flutter_weather/widgets/compass_painter.dart';
 import 'package:flutter_weather/widgets/gauge_painter.dart';
 import 'package:flutter_weather/widgets/sun_moon_path_painter.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -368,7 +369,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
             ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
-          Text(windDir, style: Theme.of(context).textTheme.bodySmall),
+          Center(
+            child: Column(
+              children: [
+                CustomPaint(
+                  size: Size.square(60),
+                  painter: CompassPainter(windDir),
+                ),
+                Text(windDir, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -525,7 +536,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 mainAxisSize: MainAxisSize.min, // Add this
                 children: [
                   Text(
-                    '${cloud.round()}%',
+                    '${cloud.round()}',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -731,8 +742,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             height: 60,
             child: CustomPaint(
               painter: SunMoonPathPainter(
-                WeatherUtils.calculatePosition(sunrise),
-                WeatherUtils.calculatePosition(sunset),
+                WeatherUtils.calculateSunPosition(sunrise, sunset),
                 Colors.amber,
               ),
             ),
@@ -747,7 +757,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
       elevation: 0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -776,8 +786,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             height: 60,
             child: CustomPaint(
               painter: SunMoonPathPainter(
-                WeatherUtils.calculatePosition(moonrise),
-                WeatherUtils.calculatePosition(moonset),
+                WeatherUtils.calculateMoonPosition(moonrise, moonset),
                 Colors.grey,
               ),
             ),
@@ -791,13 +800,35 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return WeatherCard(
       elevation: 0,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
+          Row(
+            children: [
+              Icon(
+                Symbols.circle,
+                fill: 1,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Moon Phase',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
           Icon(WeatherUtils.getMoonPhaseIcon(moonPhase), size: 72),
-          const SizedBox(width: 8),
-          Text(moonPhase, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(width: 12),
+          Center(
+            child: Text(
+              moonPhase,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
         ],
       ),
     );
@@ -806,21 +837,31 @@ class _WeatherScreenState extends State<WeatherScreen> {
   // Helpers
   List<Widget> _buildTemperatureBars() {
     final heights = [15, 20, 25, 30, 35, 35, 30, 25, 20, 15];
-    return heights.map((height) {
+
+    return List.generate(heights.length, (index) {
       return SizedBox(
         width: 8,
         child: Container(
-          height: height.toDouble(),
+          height: heights[index].toDouble(),
           decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(12),
-              bottom: Radius.circular(12),
-            ),
+            color: getBarColor(index, heights.length),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       );
-    }).toList();
+    });
+  }
+
+  Color getBarColor(int index, int total) {
+    final t = index <= total / 2
+        ? index / (total / 2)
+        : (total - 1 - index) / (total / 2);
+
+    return Color.lerp(
+      Colors.green.shade300,
+      Colors.yellow.shade600,
+      t.clamp(0.0, 1.0),
+    )!;
   }
 
   List<Widget> _buildVisibilityBars(double visibility) {

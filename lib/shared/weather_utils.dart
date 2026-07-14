@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class WeatherUtils {
@@ -78,18 +79,29 @@ class WeatherUtils {
     return (temp - minTemp) / (maxTempRange - minTemp);
   }
 
-  static double calculatePosition(String time) {
-    try {
-      final parts = time.split(':');
-      if (parts.length == 2) {
-        final hour = int.parse(parts[0]);
-        final minute = int.parse(parts[1]);
-        return (hour * 3600 + minute * 60) / (24 * 3600);
-      }
-      return 0.5;
-    } catch (_) {
-      return 0.5;
-    }
+  static double calculateSunPosition(String sunrise, String sunset) {
+    final sunriseTime = _parseTime(sunrise);
+    final sunsetTime = _parseTime(sunset);
+    final now = DateTime.now();
+    final totalDuration = sunsetTime.difference(sunriseTime).inSeconds;
+    final elapsedDuration = now.difference(sunriseTime).inSeconds;
+    return elapsedDuration / totalDuration;
+  }
+
+  static double calculateMoonPosition(String moonRise, String moonSet) {
+    final moonRiseTime = _parseTime(moonRise);
+    final moonSetTime = _parseTime(moonSet);
+    final now = DateTime.now();
+    final totalDuration = moonSetTime.difference(moonRiseTime).inSeconds;
+    final elapsedDuration = now.difference(moonRiseTime).inSeconds;
+    return elapsedDuration / totalDuration;
+  }
+
+  static DateTime _parseTime(String time) {
+    final now = DateTime.now();
+    final parsed = DateFormat('hh:mm a').parse(time);
+
+    return DateTime(now.year, now.month, now.day, parsed.hour, parsed.minute);
   }
 
   static double toDouble(dynamic value) {
