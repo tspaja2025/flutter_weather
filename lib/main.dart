@@ -39,7 +39,7 @@ final multipleCitiesWeatherProvider = FutureProvider<List<WeatherData>>((
 ) async {
   final cities = ref.watch(savedCitiesProvider);
   final weatherService = ref.watch(weatherServiceProvider);
-  return await weatherService.getAllweather(cities);
+  return await weatherService.getAllWeatherData(cities);
 });
 
 final forecastProvider = FutureProvider.family<ForecastData, String>((
@@ -268,13 +268,14 @@ class WeatherService {
   final String _apiKey = dotenv.env['WEATHERAPI'] ?? '';
 
   // Get current weather
-  Future<Map<String, dynamic>> getWeather(String city) async {
+  Future<WeatherData> getWeatherData(String city) async {
     final url = Uri.parse(
       'https://api.weatherapi.com/v1/current.json?key=$_apiKey&q=$city',
     );
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final json = jsonDecode(response.body);
+      return WeatherData.fromJson(json);
     } else {
       throw Exception(
         'Failed to load weather: ${response.statusCode}\n${response.body}',
@@ -283,7 +284,7 @@ class WeatherService {
   }
 
   // Get forecast weather
-  Future<Map<String, dynamic>> getForecast(String city) async {
+  Future<ForecastData> getForecast(String city) async {
     final url = Uri.parse(
       'https://api.weatherapi.com/v1/forecast.json?key=$_apiKey&q=$city&days=7',
     );
@@ -297,27 +298,32 @@ class WeatherService {
     }
   }
 
-  // Get both current and forecast data
-  Future<Map<String, dynamic>> getWeatherData(String city) async {
-    final current = await getWeather(city);
-    final forecast = await getForecast(city);
-    return {...current, 'forecast': forecast['forecast']};
-  }
-
-  // Get weather data for multiple cities
-  Future<List<Map<String, dynamic>>> getMultipleCitiesWeather(
-    List<String> cities,
-  ) async {
-    final List<Future<Map<String, dynamic>>> futures = cities
-        .map((city) => getWeatherData(city))
-        .toList();
-
-    return await Future.wait(futures);
-  }
-
-  Future<List<Map<String, dynamic>>> getAllweather(List<String> cities) async {
+  // Get all Weather Data
+  Future<List<WeatherData>> getAllWeatherData(List<String> cities) async {
     return await Future.wait(cities.map((city) => getWeatherData(city)));
   }
+
+  // // Get both current and forecast data
+  // Future<Map<String, dynamic>> getWeatherData(String city) async {
+  //   final current = await getWeather(city);
+  //   final forecast = await getForecast(city);
+  //   return {...current, 'forecast': forecast['forecast']};
+  // }
+
+  // // Get weather data for multiple cities
+  // Future<List<Map<String, dynamic>>> getMultipleCitiesWeather(
+  //   List<String> cities,
+  // ) async {
+  //   final List<Future<Map<String, dynamic>>> futures = cities
+  //       .map((city) => getWeatherData(city))
+  //       .toList();
+
+  //   return await Future.wait(futures);
+  // }
+
+  // Future<List<Map<String, dynamic>>> getAllweather(List<String> cities) async {
+  //   return await Future.wait(cities.map((city) => getWeatherData(city)));
+  // }
 }
 
 class WeatherUtils {
@@ -437,7 +443,7 @@ class WeatherUtils {
 
 Future<void> main() async {
   await dotenv.load();
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -480,16 +486,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AppScaffold extends StatefulWidget {
+class AppScaffold extends ConsumerStatefulWidget {
   final Widget child;
 
   const AppScaffold({super.key, required this.child});
 
   @override
-  State<AppScaffold> createState() => _AppScaffoldState();
+  ConsumerState<AppScaffold> createState() => _AppScaffoldState();
 }
 
-class _AppScaffoldState extends State<AppScaffold> {
+class _AppScaffoldState extends ConsumerState<AppScaffold> {
   int _selectedIndex = 0;
 
   @override
@@ -544,27 +550,7 @@ class _AppScaffoldState extends State<AppScaffold> {
           FloatingActionButtonLocation.miniCenterDocked,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Search'),
-                content: TextField(
-                  decoration: InputDecoration(hintText: 'Search city'),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'OK'),
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
+          _showSearchDialog(context);
         },
         mini: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
@@ -573,35 +559,62 @@ class _AppScaffoldState extends State<AppScaffold> {
       body: widget.child,
     );
   }
+
+  void _showSearchDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String? searchCity;
+
+        return AlertDialog(
+          title: const Text('Search'),
+          content: TextField(
+            decoration: InputDecoration(hintText: 'Search city'),
+            onChanged: (value) {
+              searchCity = value;
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (searchCity != null && searchCity!.isNotEmpty) {
+                  ref.read(selectedCityProvider.notifier).state = searchCity!;
+                  Navigator.pop(context, 'OK');
+                }
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
-class WeatherScreen extends StatefulWidget {
+// class WeatherScreen extends StatefulWidget {
+//   const WeatherScreen({super.key});
+
+//   @override
+//   State<WeatherScreen> createState() => _WeatherScreenState();
+// }
+
+class WeatherScreen extends ConsumerWidget {
   const WeatherScreen({super.key});
 
   @override
-  State<WeatherScreen> createState() => _WeatherScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weatherAsync = ref.watch(weatherDataProvider);
+    final city = ref.watch(selectedCityProvider);
 
-class _WeatherScreenState extends State<WeatherScreen> {
-  final WeatherService _weatherService = WeatherService();
-  final String _city = 'Tampere';
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _weatherService.getWeatherData(_city),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return _buildErrorWidget(context, snapshot.error.toString());
-        }
-
-        final data = snapshot.data!;
-        return _buildWeatherContent(context, data);
-      },
+    return weatherAsync.when(
+      data: (data) => _buildWeatherContent(context, data, city),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) =>
+          _buildErrorWidget(context, error.toString()),
     );
   }
 
@@ -622,56 +635,67 @@ class _WeatherScreenState extends State<WeatherScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-            },
-            child: const Text('Retry'),
-          ),
+          ElevatedButton(onPressed: () {}, child: const Text('Retry')),
         ],
       ),
     );
   }
 
-  Widget _buildWeatherContent(BuildContext context, Map<String, dynamic> data) {
-    final current = data['current'];
-    final forecast = data['forecast'];
-    final forecastDay = forecast['forecastday'];
-    final todayForecast = forecastDay[0]['day'];
+  Widget _buildWeatherContent(
+    BuildContext context,
+    WeatherData data,
+    String city,
+  ) {
+    final current = data.current;
+    final forecastDays = data.forecast.forecastDays;
+    final todayForecast = forecastDays[0].day;
+    final astro = forecastDays[0].astro;
 
-    final currentTemp = WeatherUtils.toInt(current['temp_c']);
-    final currentCondition = current['condition']['text'] as String;
-    final feelsLike = WeatherUtils.toInt(current['feelslike_c']);
-    final humidity = WeatherUtils.toInt(current['humidity']);
-    final windKph = WeatherUtils.toInt(current['wind_kph']);
-    final windDir = current['wind_dir'] as String;
-    final pressure = WeatherUtils.toDouble(current['pressure_mb']);
-    final visibility = WeatherUtils.toDouble(current['vis_km']);
-    final uv = WeatherUtils.toDouble(current['uv']);
-    final cloud = WeatherUtils.toDouble(current['cloud']);
-    final dewPoint = WeatherUtils.toInt(current['dewpoint_c']);
-    final maxTemp = WeatherUtils.toInt(todayForecast['maxtemp_c']);
-    final minTemp = WeatherUtils.toInt(todayForecast['mintemp_c']);
-
-    final astro = forecastDay[0]['astro'];
-    final sunrise = astro['sunrise'] as String;
-    final sunset = astro['sunset'] as String;
-    final moonrise = astro['moonrise'] as String;
-    final moonset = astro['moonset'] as String;
-    final moonPhase = astro['moon_phase'] as String;
-
-    // Get hourly forecast for today
-    final hourlyForecasts = (forecastDay[0]['hour'] as List)
-        .cast<Map<String, dynamic>>();
+    // Get next 5 hours
     final now = DateTime.now();
     final currentHour = now.hour;
-    final nextHours = <Map<String, dynamic>>[];
+    final hourlyForecasts = forecastDays[0].hours;
+    final nextHours = <HourlyWeather>[];
     for (int i = 0; i < 5; i++) {
       final hourIndex = (currentHour + i) % 24;
       if (hourIndex < hourlyForecasts.length) {
         nextHours.add(hourlyForecasts[hourIndex]);
       }
     }
+
+    // final currentTemp = WeatherUtils.toInt(current['temp_c']);
+    // final currentCondition = current['condition']['text'] as String;
+    // final feelsLike = WeatherUtils.toInt(current['feelslike_c']);
+    // final humidity = WeatherUtils.toInt(current['humidity']);
+    // final windKph = WeatherUtils.toInt(current['wind_kph']);
+    // final windDir = current['wind_dir'] as String;
+    // final pressure = WeatherUtils.toDouble(current['pressure_mb']);
+    // final visibility = WeatherUtils.toDouble(current['vis_km']);
+    // final uv = WeatherUtils.toDouble(current['uv']);
+    // final cloud = WeatherUtils.toDouble(current['cloud']);
+    // final dewPoint = WeatherUtils.toInt(current['dewpoint_c']);
+    // final maxTemp = WeatherUtils.toInt(todayForecast['maxtemp_c']);
+    // final minTemp = WeatherUtils.toInt(todayForecast['mintemp_c']);
+
+    // final astro = forecastDay[0]['astro'];
+    // final sunrise = astro['sunrise'] as String;
+    // final sunset = astro['sunset'] as String;
+    // final moonrise = astro['moonrise'] as String;
+    // final moonset = astro['moonset'] as String;
+    // final moonPhase = astro['moon_phase'] as String;
+
+    // // Get hourly forecast for today
+    // final hourlyForecasts = (forecastDay[0]['hour'] as List)
+    //     .cast<Map<String, dynamic>>();
+    // final now = DateTime.now();
+    // final currentHour = now.hour;
+    // final nextHours = <Map<String, dynamic>>[];
+    // for (int i = 0; i < 5; i++) {
+    //   final hourIndex = (currentHour + i) % 24;
+    //   if (hourIndex < hourlyForecasts.length) {
+    //     nextHours.add(hourlyForecasts[hourIndex]);
+    //   }
+    // }
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -681,11 +705,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
         children: [
           _buildCurrentWeather(
             context,
-            city: _city,
-            temperature: currentTemp,
-            condition: currentCondition,
-            maxTemp: maxTemp,
-            minTemp: minTemp,
+            city: city,
+            temperature: current.tempC.round(),
+            condition: current.condition.text,
+            maxTemp: todayForecast.maxTempC.round(),
+            minTemp: todayForecast.minTempC.round(),
           ),
           const SizedBox(height: 32),
           _buildHourlyForecast(context, nextHours),
@@ -698,18 +722,22 @@ class _WeatherScreenState extends State<WeatherScreen> {
             mainAxisSpacing: 12,
             childAspectRatio: 1.15,
             children: [
-              _buildTemperatureCard(context, minTemp, maxTemp),
-              _buildFeelsLikeCard(context, feelsLike),
-              _buildWindCard(context, windKph, windDir),
-              _buildHumidityCard(context, humidity),
-              _buildUVCard(context, uv),
-              _buildCloudCard(context, cloud),
-              _buildDewPointCard(context, dewPoint),
-              _buildPressureCard(context, pressure),
-              _buildVisibilityCard(context, visibility),
-              _buildSunCard(context, sunrise, sunset),
-              _buildMoonCard(context, moonrise, moonset),
-              _buildMoonPhaseCard(context, moonPhase),
+              _buildTemperatureCard(
+                context,
+                todayForecast.minTempC.round(),
+                todayForecast.maxTempC.round(),
+              ),
+              _buildFeelsLikeCard(context, current.feelslikeC.round()),
+              _buildWindCard(context, current.windKph.round(), current.windDir),
+              _buildHumidityCard(context, current.humidity),
+              _buildUVCard(context, current.uv),
+              _buildCloudCard(context, current.cloud),
+              _buildDewPointCard(context, current.dewpointC.round()),
+              _buildPressureCard(context, current.pressureMb),
+              _buildVisibilityCard(context, current.visKm),
+              _buildSunCard(context, astro.sunrise, astro.sunset),
+              _buildMoonCard(context, astro.moonrise, astro.moonset),
+              _buildMoonPhaseCard(context, astro.moonPhase),
             ],
           ),
         ],
@@ -734,7 +762,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             size: 150,
             color: Theme.of(context).colorScheme.primary,
           ),
-          Text(_city, style: Theme.of(context).textTheme.headlineLarge),
+          Text(city, style: Theme.of(context).textTheme.headlineLarge),
           Text(
             '$temperature°',
             style: Theme.of(context).textTheme.headlineLarge,
@@ -759,10 +787,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-  Widget _buildHourlyForecast(
-    BuildContext context,
-    List<Map<String, dynamic>> hours,
-  ) {
+  Widget _buildHourlyForecast(BuildContext context, List<HourlyWeather> hours) {
     return WeatherCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -790,9 +815,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
               separatorBuilder: (context, index) => const SizedBox(width: 16),
               itemBuilder: (context, index) {
                 final hour = hours[index];
-                final time = hour['time'] as String;
-                final temp = WeatherUtils.toInt(hour['temp_c']);
-                final condition = hour['condition']['text'] as String;
+                final time = hour.time;
+                final temp = WeatherUtils.toInt(hour.tempC);
+                final condition = hour.condition.text;
                 final isNow = index == 0;
 
                 return HourlyForecastItem(
@@ -1456,34 +1481,42 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }
 }
 
-class ForecastScreen extends StatefulWidget {
+// class ForecastScreen extends StatefulWidget {
+//   const ForecastScreen({super.key});
+
+//   @override
+//   State<StatefulWidget> createState() => _ForecastScreenState();
+// }
+
+class ForecastScreen extends ConsumerWidget {
   const ForecastScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() => _ForecastScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weatherAsync = ref.watch(weatherDataProvider);
+    final city = ref.watch(selectedCityProvider);
 
-class _ForecastScreenState extends State<ForecastScreen> {
-  final WeatherService _weatherService = WeatherService();
-  final String _city = 'Tampere';
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _weatherService.getWeatherData(_city),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return _buildErrorWidget(context, snapshot.error.toString());
-        }
-
-        final data = snapshot.data!;
-        return _buildForecastContent(context, data);
-      },
+    return weatherAsync.when(
+      data: (data) => _buildForecastContent(context, data, city),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => _buildErrorWidget(context, error.toString()),
     );
+
+    // return FutureBuilder(
+    //   future: _weatherService.getWeatherData(_city),
+    //   builder: (context, snapshot) {
+    //     if (snapshot.connectionState == ConnectionState.waiting) {
+    //       return const Center(child: CircularProgressIndicator());
+    //     }
+
+    //     if (snapshot.hasError) {
+    //       return _buildErrorWidget(context, snapshot.error.toString());
+    //     }
+
+    //     final data = snapshot.data!;
+    //     return _buildForecastContent(context, data);
+    //   },
+    // );
   }
 
   Widget _buildErrorWidget(BuildContext context, String error) {
@@ -1503,12 +1536,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-            },
-            child: const Text('Retry'),
-          ),
+          ElevatedButton(onPressed: () {}, child: const Text('Retry')),
         ],
       ),
     );
@@ -1516,18 +1544,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
 
   Widget _buildForecastContent(
     BuildContext context,
-    Map<String, dynamic> data,
+    WeatherData data,
+    String city,
   ) {
-    final forecast = data['forecast'];
-    final forecastDay = forecast['forecastday'];
-
-    final dailyForecasts = forecastDay.map((day) {
-      return {
-        'date': DateTime.parse(day['date']),
-        'day': day['day'],
-        'condition': day['day']['condition']['text'],
-      };
-    }).toList();
+    final forecastDays = data.forecast.forecastDays;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -1536,7 +1556,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _city,
+            city,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
               letterSpacing: 4,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1544,7 +1564,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '${dailyForecasts.length}-Day Forecast',
+            '${forecastDays.length}-Day Forecast',
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
               color: Theme.of(context).colorScheme.primary,
             ),
@@ -1555,17 +1575,17 @@ class _ForecastScreenState extends State<ForecastScreen> {
           WeatherCard(
             child: Column(
               children: [
-                ...dailyForecasts.asMap().entries.map((entry) {
+                ...forecastDays.asMap().entries.map((entry) {
                   final index = entry.key;
                   final dayData = entry.value;
-                  final day = dayData['day'];
-                  final date = dayData['date'];
+                  final day = dayData.day;
+                  final date = dayData.date;
                   final dayName = index == 0
                       ? 'Today'
                       : WeatherUtils.getDayName(date.weekday);
-                  final condition = dayData['condition'];
-                  final low = day['mintemp_c'].round();
-                  final high = day['maxtemp_c'].round();
+                  final condition = dayData.day.condition.text;
+                  final low = day.minTempC.round();
+                  final high = day.maxTempC.round();
 
                   return Column(
                     children: [
@@ -1575,18 +1595,18 @@ class _ForecastScreenState extends State<ForecastScreen> {
                         low: low,
                         high: high,
                         progressStart: WeatherUtils.mapTemperatureToProgress(
-                          low,
-                          high,
+                          low.toDouble(),
+                          high.toDouble(),
                         ),
                         progressEnd: WeatherUtils.mapTemperatureToProgress(
-                          high,
-                          high + 5,
+                          high.toDouble(),
+                          high.toDouble() + 5,
                         ),
                       ),
-                      if (index < dailyForecasts.length - 1) const Divider(),
+                      if (index < forecastDays.length - 1) const Divider(),
                     ],
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
@@ -1596,155 +1616,157 @@ class _ForecastScreenState extends State<ForecastScreen> {
   }
 }
 
-class CitiesScreen extends StatefulWidget {
+// class CitiesScreen extends StatefulWidget {
+//   const CitiesScreen({super.key});
+
+//   @override
+//   State<StatefulWidget> createState() => _CitiesScreenState();
+// }
+
+class CitiesScreen extends ConsumerWidget {
   const CitiesScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() => _CitiesScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final citiesAsync = ref.watch(multipleCitiesWeatherProvider);
+    final savedCities = ref.watch(savedCitiesProvider);
+
+    return citiesAsync.when(
+      data: (data) => _buildCitiesContent(context, data, savedCities),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) =>
+          _buildErrorWidget(context, error.toString()),
+    );
+  }
+
+  // return FutureBuilder(
+  //   future: _weatherService.getAllweather(_cities),
+  //   builder: (context, snapshot) {
+  //     if (snapshot.connectionState == ConnectionState.waiting) {
+  //       return const Center(child: CircularProgressIndicator());
+  //     }
+
+  //     if (snapshot.hasError) {
+  //       return _buildErrorWidget(context, snapshot.error.toString());
+  //     }
+
+  //     final cities = snapshot.data!;
+  //     return _buildCitiesContent(context, cities);
+  //   },
+  // );
 }
 
-class _CitiesScreenState extends State<CitiesScreen> {
-  final WeatherService _weatherService = WeatherService();
-  final List<String> _cities = ['London', 'New York', 'Tokyo'];
+Widget _buildErrorWidget(BuildContext context, String error) {
+  return Center(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(
+          Symbols.error,
+          size: 64,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Error: $error',
+          style: Theme.of(context).textTheme.bodyLarge,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(onPressed: () {}, child: const Text('Retry')),
+      ],
+    ),
+  );
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _weatherService.getAllweather(_cities),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return _buildErrorWidget(context, snapshot.error.toString());
-        }
-
-        final cities = snapshot.data!;
-        return _buildCitiesContent(context, cities);
-      },
-    );
-  }
-
-  Widget _buildErrorWidget(BuildContext context, String error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Symbols.error,
-            size: 64,
-            color: Theme.of(context).colorScheme.error,
+Widget _buildCitiesContent(
+  BuildContext context,
+  List<WeatherData> cities,
+  List<String> savedCities,
+) {
+  return SingleChildScrollView(
+    physics: const BouncingScrollPhysics(),
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Manage Cities',
+          style: Theme.of(context).textTheme.displayLarge?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Error: $error',
-            style: Theme.of(context).textTheme.bodyLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-            },
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 16),
 
-  Widget _buildCitiesContent(
-    BuildContext context,
-    List<Map<String, dynamic>> cities,
-  ) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Manage Cities',
-            style: Theme.of(context).textTheme.displayLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
+        SizedBox(
+          width: double.infinity,
+          child: TextField(
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              prefixIcon: const Icon(Symbols.search),
+              hintText: 'Search for a city...',
             ),
           ),
-          const SizedBox(height: 16),
+        ),
 
-          SizedBox(
-            width: double.infinity,
-            child: TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                prefixIcon: const Icon(Symbols.search),
-                hintText: 'Search for a city...',
-              ),
-            ),
-          ),
+        const SizedBox(height: 16),
 
-          const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('MY CITIES', style: Theme.of(context).textTheme.labelMedium),
+            TextButton(onPressed: () {}, child: const Text('Edit')),
+          ],
+        ),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('MY CITIES', style: Theme.of(context).textTheme.labelMedium),
-              TextButton(onPressed: () {}, child: const Text('Edit')),
-            ],
-          ),
+        Column(
+          children: cities.asMap().entries.map((entry) {
+            // final index = entry.key;
+            final data = entry.value;
+            final forecastDay = data.forecast.forecastDays[0].day;
 
-          Column(
-            children: cities.map((cityData) {
-              final location = cityData['location'];
-              final current = cityData['current'];
-              final forecast = cityData['forecast']['forecastday'][0]['day'];
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: CityCard(
-                  city: location['name'],
-                  time: location['localtime'],
-                  weather: current['condition']['text'],
-                  weatherIcon: WeatherUtils.getWeatherIcon(
-                    current['condition']['text'],
-                  ),
-                  temperature: current['temp_c'],
-                  high: forecast['maxtemp_c'].round(),
-                  low: forecast['mintemp_c'].round(),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: CityCard(
+                city: data.location.name,
+                time: data.location.localtime,
+                weather: data.current.condition.text,
+                weatherIcon: WeatherUtils.getWeatherIcon(
+                  data.current.condition.text,
                 ),
-              );
-            }).toList(),
-          ),
+                temperature: data.current.tempC,
+                high: forecastDay.maxTempC.round(),
+                low: forecastDay.minTempC.round(),
+              ),
+            );
+          }).toList(),
+        ),
 
-          const SizedBox(height: 24),
+        const SizedBox(height: 24),
 
-          Text(
-            'RECOMMENDED CITIES',
-            style: Theme.of(context).textTheme.labelMedium,
-          ),
+        Text(
+          'RECOMMENDED CITIES',
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
 
-          const SizedBox(height: 12),
+        const SizedBox(height: 12),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              OutlinedButton(onPressed: () {}, child: const Text('Paris')),
-              OutlinedButton(onPressed: () {}, child: const Text('Berlin')),
-              OutlinedButton(onPressed: () {}, child: const Text('Sydney')),
-              OutlinedButton(onPressed: () {}, child: const Text('Dubai')),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: ['Paris', 'Berlin', 'Sydney', 'Dubai'].map((city) {
+            return OutlinedButton(onPressed: () {}, child: Text(city));
+          }).toList(),
+        ),
+      ],
+    ),
+  );
 }
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -1754,7 +1776,22 @@ class SettingsScreen extends StatelessWidget {
           icon: const Icon(Symbols.arrow_back),
         ),
       ),
-      body: Center(child: const Text('Settings Screen')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Settings Screen'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                // Example: Change city
+                ref.read(selectedCityProvider.notifier).state = 'Helsinki';
+              },
+              child: const Text('Change City to Helsinki'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
