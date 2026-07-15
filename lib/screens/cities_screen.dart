@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_weather/service/weather_service.dart';
 import 'package:flutter_weather/shared/city_card.dart';
-import 'package:flutter_weather/shared/weather_utils.dart';
+import 'package:flutter_weather/utils/weather_utils.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class CitiesScreen extends StatefulWidget {
@@ -51,12 +51,7 @@ class _CitiesScreenState extends State<CitiesScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-            },
-            child: const Text('Retry'),
-          ),
+          ElevatedButton(onPressed: () {}, child: const Text('Retry')),
         ],
       ),
     );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_weather/service/weather_service.dart';
 import 'package:flutter_weather/shared/hourly_forecast_item.dart';
 import 'package:flutter_weather/shared/weather_card.dart';
-import 'package:flutter_weather/shared/weather_utils.dart';
+import 'package:flutter_weather/utils/weather_utils.dart';
 import 'package:flutter_weather/widgets/compass_painter.dart';
 import 'package:flutter_weather/widgets/gauge_painter.dart';
 import 'package:flutter_weather/widgets/sun_moon_path_painter.dart';

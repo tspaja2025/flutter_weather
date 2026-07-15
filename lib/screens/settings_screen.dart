@@ -16,7 +16,19 @@ class SettingsScreen extends StatelessWidget {
           icon: const Icon(Symbols.arrow_back),
         ),
       ),
-      body: Center(child: const Text('Settings Screen')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Settings Screen'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {},
+              child: const Text('Change City to Helsinki'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -14,10 +14,6 @@ class AppScaffold extends StatefulWidget {
 class _AppScaffoldState extends State<AppScaffold> {
   int _selectedIndex = 0;
 
-  Future<void> _refresh() async {
-    await Future.delayed(const Duration(seconds: 2));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
