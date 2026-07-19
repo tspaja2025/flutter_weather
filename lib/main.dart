@@ -1,119 +1,217 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_weather/theme/stormy.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_weather/widgets/compass_painter.dart';
+import 'package:flutter_weather/widgets/gauge_painter.dart';
+import 'package:flutter_weather/widgets/sun_moon_path_painter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:http/http.dart' as http;
 
-// class WeatherService {
-//   final String apiKey = dotenv.env['WEATHERAPI'] ?? '';
-//   final _cache = <String, _CacheEntry>{};
-//   static const _cacheDuration = Duration(minutes: 5);
+class WeatherService {
+  final String apiKey = dotenv.env['WEATHERAPI'] ?? '';
+  final _cache = <String, _CacheEntry>{};
+  static const _cacheDuration = Duration(minutes: 5);
 
-//   Future<Map<String, dynamic>> getWeatherData(String city) async {
-//     final key = city.toLowerCase();
+  Future<Map<String, dynamic>> getWeatherData(String city) async {
+    final key = city.toLowerCase();
 
-//     if (_cache.containsKey(key)) {
-//       final entry = _cache[key]!;
-//       if (DateTime.now().difference(entry.timestamp) < _cacheDuration) {
-//         return entry.data;
-//       }
-//     }
+    if (_cache.containsKey(key)) {
+      final entry = _cache[key]!;
+      if (DateTime.now().difference(entry.timestamp) < _cacheDuration) {
+        return entry.data;
+      }
+    }
 
-//     try {
-//       final current = await getWeather(city);
-//       final forecast = await getForecast(city);
-//       final data = {...current, 'forecast': forecast['forecast']};
+    try {
+      final current = await getWeather(city);
+      final forecast = await getForecast(city);
+      final data = {...current, 'forecast': forecast['forecast']};
 
-//       _cache[key] = _CacheEntry(data, DateTime.now());
-//       return data;
-//     } catch (e) {
-//       throw Exception('Failed to fetch weather data: $e');
-//     }
-//   }
+      _cache[key] = _CacheEntry(data, DateTime.now());
+      return data;
+    } catch (e) {
+      throw Exception('Failed to fetch weather data: $e');
+    }
+  }
 
-//   Future<Map<String, dynamic>> getWeather(String city) async {
-//     if (apiKey.isEmpty) {
-//       throw Exception('Weather API key not configured');
-//     }
+  Future<Map<String, dynamic>> getWeather(String city) async {
+    if (apiKey.isEmpty) {
+      throw Exception('Weather API key not configured');
+    }
 
-//     final url = Uri.parse(
-//       'https://api.weatherapi.com/v1/current.json?key=$apiKey&q=$city',
-//     );
+    final url = Uri.parse(
+      'https://api.weatherapi.com/v1/current.json?key=$apiKey&q=$city',
+    );
 
-//     try {
-//       final response = await http.get(url).timeout(const Duration(seconds: 10));
+    try {
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
 
-//       if (response.statusCode == 200) {
-//         return jsonDecode(response.body);
-//       } else {
-//         throw Exception('API Error: ${response.statusCode} - ${response.body}');
-//       }
-//     } on TimeoutException {
-//       throw Exception('Connection timeout. Please try again.');
-//     } catch (e) {
-//       throw Exception('Network error: $e');
-//     }
-//   }
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+      }
+    } on TimeoutException {
+      throw Exception('Connection timeout. Please try again.');
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
 
-//   Future<Map<String, dynamic>> getForecast(String city) async {
-//     final url = Uri.parse(
-//       'https://api.weatherapi.com/v1/forecast.json?key=$apiKey&q=$city&days=7',
-//     );
-//     final response = await http.get(url);
-//     if (response.statusCode == 200) {
-//       return jsonDecode(response.body);
-//     } else {
-//       throw Exception(
-//         'Failed to load forecast: ${response.statusCode}\n${response.body}',
-//       );
-//     }
-//   }
+  Future<Map<String, dynamic>> getForecast(String city) async {
+    final url = Uri.parse(
+      'https://api.weatherapi.com/v1/forecast.json?key=$apiKey&q=$city&days=7',
+    );
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception(
+        'Failed to load forecast: ${response.statusCode}\n${response.body}',
+      );
+    }
+  }
 
-//   Future<List<Map<String, dynamic>>> getMultipleCitiesWeather(
-//     List<String> cities,
-//   ) async {
-//     final List<Future<Map<String, dynamic>>> futures = cities
-//         .map((city) => getWeatherData(city))
-//         .toList();
+  Future<List<Map<String, dynamic>>> getMultipleCitiesWeather(
+    List<String> cities,
+  ) async {
+    final List<Future<Map<String, dynamic>>> futures = cities
+        .map((city) => getWeatherData(city))
+        .toList();
 
-//     return await Future.wait(futures);
-//   }
+    return await Future.wait(futures);
+  }
 
-//   Future<List<Map<String, dynamic>>> getAllweather(List<String> cities) async {
-//     return await Future.wait(cities.map((city) => getWeatherData(city)));
-//   }
-// }
+  Future<List<Map<String, dynamic>>> getAllweather(List<String> cities) async {
+    return await Future.wait(cities.map((city) => getWeatherData(city)));
+  }
+}
 
-// class _CacheEntry {
-//   final Map<String, dynamic> data;
-//   final DateTime timestamp;
+class WeatherUtils {
+  static IconData getWeatherIcon(String condition) {
+    final lower = condition.toLowerCase();
+    if (lower.contains('sunny') || lower.contains('clear')) {
+      return Symbols.sunny;
+    } else if (lower.contains('partly cloudy')) {
+      return Symbols.partly_cloudy_day;
+    } else if (lower.contains('cloudy') || lower.contains('overcast')) {
+      return Symbols.cloud;
+    } else if (lower.contains('rain') || lower.contains('drizzle')) {
+      return Symbols.rainy;
+    } else if (lower.contains('snow')) {
+      return Symbols.ac_unit;
+    } else if (lower.contains('thunder') || lower.contains('storm')) {
+      return Symbols.thunderstorm;
+    } else if (lower.contains('fog') || lower.contains('mist')) {
+      return Symbols.foggy;
+    }
+    return Symbols.partly_cloudy_day;
+  }
 
-//   _CacheEntry(this.data, this.timestamp);
-// }
+  static String getDayName(int weekday) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days[weekday - 1];
+  }
 
-// final weatherServiceProvider = Provider<WeatherService>((ref) {
-//   return WeatherService();
-// });
+  static String getHumidityLevel(int humidity) {
+    if (humidity < 30) return 'Low';
+    if (humidity < 60) return 'Moderate';
+    return 'High';
+  }
 
-// final currentWeatherProvider =
-//     FutureProvider.family<Map<String, dynamic>, String>((ref, city) async {
-//       final service = ref.watch(weatherServiceProvider);
-//       return service.getWeatherData(city);
-//     });
+  static String getUVLevel(double uv) {
+    if (uv < 3) return 'Low';
+    if (uv < 6) return 'Moderate';
+    if (uv < 8) return 'High';
+    if (uv < 11) return 'Very High';
+    return 'Extreme';
+  }
 
-// final multipleCitiesProvider =
-//     FutureProvider.family<List<Map<String, dynamic>>, List<String>>((
-//       ref,
-//       cities,
-//     ) async {
-//       final service = ref.watch(weatherServiceProvider);
-//       return service.getMultipleCitiesWeather(cities);
-//     });
+  static Color getCloudColor(double cloud) {
+    if (cloud < 30) return Colors.green;
+    if (cloud < 60) return Colors.orange;
+    return Colors.red;
+  }
+
+  static String getCloudLevel(double cloud) {
+    if (cloud < 30) return 'Clear';
+    if (cloud < 60) return 'Partly Cloudy';
+    return 'Cloudy';
+  }
+
+  static String getPressureLevel(double pressure) {
+    if (pressure < 1010) return 'Low';
+    if (pressure < 1020) return 'Normal';
+    return 'High';
+  }
+
+  static IconData getMoonPhaseIcon(String phase) {
+    final lower = phase.toLowerCase();
+    if (lower.contains('new')) return Symbols.bedtime;
+    if (lower.contains('waxing crescent')) return Symbols.brightness_3;
+    if (lower.contains('first quarter')) return Symbols.brightness_4;
+    if (lower.contains('waxing gibbous')) return Symbols.brightness_5;
+    if (lower.contains('full')) return Symbols.brightness_6;
+    if (lower.contains('waning gibbous')) return Symbols.brightness_7;
+    if (lower.contains('last quarter')) return Symbols.brightness_4;
+    if (lower.contains('waning crescent')) return Symbols.brightness_3;
+    return Symbols.bedtime;
+  }
+
+  static double mapTemperatureToProgress(double temp, double maxTemp) {
+    final minTemp = -20.0;
+    final maxTempRange = 40.0;
+    return (temp - minTemp) / (maxTempRange - minTemp);
+  }
+
+  static double calculateSunPosition(String sunrise, String sunset) {
+    final sunriseTime = _parseTime(sunrise);
+    final sunsetTime = _parseTime(sunset);
+    final now = DateTime.now();
+    final totalDuration = sunsetTime.difference(sunriseTime).inSeconds;
+    final elapsedDuration = now.difference(sunriseTime).inSeconds;
+    return elapsedDuration / totalDuration;
+  }
+
+  static double calculateMoonPosition(String moonRise, String moonSet) {
+    final moonRiseTime = _parseTime(moonRise);
+    final moonSetTime = _parseTime(moonSet);
+    final now = DateTime.now();
+    final totalDuration = moonSetTime.difference(moonRiseTime).inSeconds;
+    final elapsedDuration = now.difference(moonRiseTime).inSeconds;
+    return elapsedDuration / totalDuration;
+  }
+
+  static DateTime _parseTime(String time) {
+    final now = DateTime.now();
+    final parsed = DateFormat('hh:mm a').parse(time);
+
+    return DateTime(now.year, now.month, now.day, parsed.hour, parsed.minute);
+  }
+
+  static double toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return 0.0;
+  }
+
+  static int toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.round();
+    return 0;
+  }
+}
+
+class _CacheEntry {
+  final Map<String, dynamic> data;
+  final DateTime timestamp;
+
+  _CacheEntry(this.data, this.timestamp);
+}
 
 final router = GoRouter(
   routes: [
@@ -137,7 +235,7 @@ void main() async {
   } catch (e) {
     throw Exception('Error loading .env file: $e');
   }
-  runApp(const ProviderScope(child: WeatherApp()));
+  runApp(const WeatherApp());
 }
 
 class WeatherApp extends StatelessWidget {
@@ -155,114 +253,116 @@ class WeatherApp extends StatelessWidget {
   }
 }
 
-class AppNavigationBar extends StatelessWidget {
-  final int selectedIndex;
-  final Function(int) onDestinationSelected;
+class AppScaffold extends StatefulWidget {
+  final int currentIndex;
+  final Widget child;
+  final String? title;
 
-  const AppNavigationBar({
+  const AppScaffold({
     super.key,
-    required this.selectedIndex,
-    required this.onDestinationSelected,
+    required this.currentIndex,
+    required this.child,
+    this.title,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return NavigationBar(
-      onDestinationSelected: onDestinationSelected,
-      selectedIndex: selectedIndex,
-      indicatorColor: Theme.of(context).colorScheme.primary,
-      destinations: const [
-        NavigationDestination(
-          selectedIcon: Icon(Symbols.cloud, fill: 1),
-          icon: Icon(Symbols.cloud),
-          label: 'Weather',
+  State<AppScaffold> createState() => _AppScaffoldState();
+}
+
+class _AppScaffoldState extends State<AppScaffold> {
+  void _onDestinationSelected(int index) {
+    if (index == widget.currentIndex) return;
+
+    switch (index) {
+      case 0:
+        context.go('/');
+        break;
+      case 1:
+        context.go('/forecast');
+        break;
+      case 2:
+        context.go('/cities');
+        break;
+      case 3:
+        context.go('/settings');
+        break;
+    }
+  }
+
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Search'),
+        content: TextField(
+          decoration: InputDecoration(hintText: 'Search city'),
         ),
-        NavigationDestination(
-          selectedIcon: Icon(Symbols.calendar_month, fill: 1),
-          icon: Icon(Symbols.calendar_month),
-          label: 'Forecast',
-        ),
-        NavigationDestination(
-          selectedIcon: Icon(Symbols.location_on, fill: 1),
-          icon: Icon(Symbols.location_on),
-          label: 'Cities',
-        ),
-        NavigationDestination(
-          selectedIcon: Icon(Symbols.settings, fill: 1),
-          icon: Icon(Symbols.settings),
-          label: 'Settings',
-        ),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'Cancel'),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'OK'),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
   }
-}
-
-class WeatherScreen extends StatefulWidget {
-  const WeatherScreen({super.key});
-
-  @override
-  State<WeatherScreen> createState() => _WeatherScreenState();
-}
-
-class _WeatherScreenState extends State<WeatherScreen> {
-  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: AppNavigationBar(
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/forecast');
-              break;
-            case 2:
-              context.go('/cities');
-              break;
-            case 3:
-              context.go('/settings');
-              break;
-          }
-        },
-        selectedIndex: _selectedIndex,
+      appBar: widget.title != null ? AppBar(title: Text(widget.title!)) : null,
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: _onDestinationSelected,
+        selectedIndex: widget.currentIndex,
+        indicatorColor: Theme.of(context).colorScheme.primary,
+        destinations: const [
+          NavigationDestination(
+            selectedIcon: Icon(Symbols.cloud, fill: 1),
+            icon: Icon(Symbols.cloud),
+            label: 'Weather',
+          ),
+          NavigationDestination(
+            selectedIcon: Icon(Symbols.calendar_month, fill: 1),
+            icon: Icon(Symbols.calendar_month),
+            label: 'Forecast',
+          ),
+          NavigationDestination(
+            selectedIcon: Icon(Symbols.location_on, fill: 1),
+            icon: Icon(Symbols.location_on),
+            label: 'Cities',
+          ),
+          NavigationDestination(
+            selectedIcon: Icon(Symbols.settings, fill: 1),
+            icon: Icon(Symbols.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniCenterDocked,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Search'),
-                content: TextField(
-                  decoration: InputDecoration(hintText: 'Search city'),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'OK'),
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-        },
+        onPressed: _showSearchDialog,
         mini: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         child: const Icon(Symbols.search),
       ),
-      body: SingleChildScrollView(
+      body: widget.child,
+    );
+  }
+}
+
+class WeatherScreen extends StatelessWidget {
+  const WeatherScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScaffold(
+      currentIndex: 0,
+      child: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -706,95 +806,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }
 }
 
-class ForecastScreen extends StatefulWidget {
+class ForecastScreen extends StatelessWidget {
   const ForecastScreen({super.key});
 
   @override
-  State<ForecastScreen> createState() => _ForecastScreenState();
-}
-
-class _ForecastScreenState extends State<ForecastScreen> {
-  int _selectedIndex = 0;
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/forecast');
-              break;
-            case 2:
-              context.go('/cities');
-              break;
-            case 3:
-              context.go('/settings');
-              break;
-          }
-        },
-        selectedIndex: _selectedIndex,
-        indicatorColor: Theme.of(context).colorScheme.primary,
-        destinations: const [
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.cloud, fill: 1),
-            icon: Icon(Symbols.cloud),
-            label: 'Weather',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.calendar_month, fill: 1),
-            icon: Icon(Symbols.calendar_month),
-            label: 'Forecast',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.location_on, fill: 1),
-            icon: Icon(Symbols.location_on),
-            label: 'Cities',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.settings, fill: 1),
-            icon: Icon(Symbols.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.miniCenterDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Search'),
-                content: TextField(
-                  decoration: InputDecoration(hintText: 'Search city'),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'OK'),
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-        mini: true,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        child: const Icon(Symbols.search),
-      ),
-      body: SingleChildScrollView(
+    return AppScaffold(
+      currentIndex: 1,
+      child: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(children: [_buildForecastContent(context)]),
@@ -863,95 +882,14 @@ class _ForecastScreenState extends State<ForecastScreen> {
   }
 }
 
-class CitiesScreen extends StatefulWidget {
+class CitiesScreen extends StatelessWidget {
   const CitiesScreen({super.key});
 
   @override
-  State<CitiesScreen> createState() => _CitiesScreenState();
-}
-
-class _CitiesScreenState extends State<CitiesScreen> {
-  int _selectedIndex = 0;
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/forecast');
-              break;
-            case 2:
-              context.go('/cities');
-              break;
-            case 3:
-              context.go('/settings');
-              break;
-          }
-        },
-        selectedIndex: _selectedIndex,
-        indicatorColor: Theme.of(context).colorScheme.primary,
-        destinations: const [
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.cloud, fill: 1),
-            icon: Icon(Symbols.cloud),
-            label: 'Weather',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.calendar_month, fill: 1),
-            icon: Icon(Symbols.calendar_month),
-            label: 'Forecast',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.location_on, fill: 1),
-            icon: Icon(Symbols.location_on),
-            label: 'Cities',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.settings, fill: 1),
-            icon: Icon(Symbols.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.miniCenterDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Search'),
-                content: TextField(
-                  decoration: InputDecoration(hintText: 'Search city'),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'OK'),
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-        mini: true,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        child: const Icon(Symbols.search),
-      ),
-      body: SingleChildScrollView(
+    return AppScaffold(
+      currentIndex: 2,
+      child: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(children: [_buildCitiesContent(context)]),
@@ -1051,95 +989,14 @@ class _CitiesScreenState extends State<CitiesScreen> {
   }
 }
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  int _selectedIndex = 0;
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/forecast');
-              break;
-            case 2:
-              context.go('/cities');
-              break;
-            case 3:
-              context.go('/settings');
-              break;
-          }
-        },
-        selectedIndex: _selectedIndex,
-        indicatorColor: Theme.of(context).colorScheme.primary,
-        destinations: const [
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.cloud, fill: 1),
-            icon: Icon(Symbols.cloud),
-            label: 'Weather',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.calendar_month, fill: 1),
-            icon: Icon(Symbols.calendar_month),
-            label: 'Forecast',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.location_on, fill: 1),
-            icon: Icon(Symbols.location_on),
-            label: 'Cities',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Symbols.settings, fill: 1),
-            icon: Icon(Symbols.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.miniCenterDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Search'),
-                content: TextField(
-                  decoration: InputDecoration(hintText: 'Search city'),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'OK'),
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-        mini: true,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        child: const Icon(Symbols.search),
-      ),
-      body: SingleChildScrollView(
+    return AppScaffold(
+      currentIndex: 3,
+      child: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(children: [const Text('Settings Screen')]),
@@ -1412,244 +1269,5 @@ class DailyForecastRow extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class SunMoonPathPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-
-  SunMoonPathPainter(this.progress, this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final pathPaint = Paint()
-      ..color = Colors.white54
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
-    final baselinePaint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 1;
-
-    canvas.drawLine(
-      Offset(0, size.height),
-      Offset(size.width, size.height),
-      baselinePaint,
-    );
-
-    final path = Path();
-    path.moveTo(20, size.height - 8);
-    path.quadraticBezierTo(size.width / 2, 8, size.width - 20, size.height - 8);
-    canvas.drawPath(path, pathPaint);
-
-    final dotPaint = Paint()..color = Colors.white54;
-    canvas.drawCircle(Offset(20, size.height - 8), 3, dotPaint);
-    canvas.drawCircle(Offset(size.width - 20, size.height - 8), 3, dotPaint);
-
-    final metric = path.computeMetrics().first;
-    final tangent = metric.getTangentForOffset(metric.length * progress)!;
-
-    canvas.drawCircle(tangent.position, 10, Paint()..color = color);
-  }
-
-  @override
-  bool shouldRepaint(covariant SunMoonPathPainter oldDelegate) {
-    return progress != oldDelegate.progress || color != oldDelegate.color;
-  }
-}
-
-class GaugePainter extends CustomPainter {
-  final double value;
-  final Color color;
-
-  GaugePainter(this.value, this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height);
-    final radius = size.width / 2.5;
-
-    final background = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 12
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final foreground = Paint()
-      ..color = color
-      ..strokeWidth = 12
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      pi,
-      pi,
-      false,
-      background,
-    );
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      pi,
-      pi * value,
-      false,
-      foreground,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class GaugePainter2 extends CustomPainter {
-  final double activeTicks;
-
-  GaugePainter2(this.activeTicks);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height);
-    final radius = size.width / 2.5;
-
-    const totalTicks = 12;
-
-    const startAngle = -180 * pi / 180;
-    const sweepAngle = 180 * pi / 180;
-
-    final inactivePaint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round;
-
-    final activePaint = Paint()
-      ..color = Colors.green
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round;
-
-    for (int i = 0; i < totalTicks; i++) {
-      final angle = startAngle + (sweepAngle / (totalTicks - 1)) * i;
-
-      final start = Offset(
-        center.dx + cos(angle) * radius,
-        center.dy + sin(angle) * radius,
-      );
-
-      final end = Offset(
-        center.dx + cos(angle) * (radius + 12),
-        center.dy + sin(angle) * (radius + 12),
-      );
-
-      canvas.drawLine(
-        start,
-        end,
-        i < activeTicks ? activePaint : inactivePaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant GaugePainter2 oldDelegate) {
-    return oldDelegate.activeTicks != activeTicks;
-  }
-}
-
-class CompassPainter extends CustomPainter {
-  final String direction;
-
-  CompassPainter(this.direction);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = size.width / 2;
-
-    final borderPaint = Paint()
-      ..color = Colors.grey
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    // Compass circle
-    canvas.drawCircle(center, radius - 2, borderPaint);
-
-    final textPainter = TextPainter(
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
-
-    void drawLabel(String text, Offset offset) {
-      textPainter.text = TextSpan(
-        text: text,
-        style: const TextStyle(
-          color: Colors.grey,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        offset - Offset(textPainter.width / 2, textPainter.height / 2),
-      );
-    }
-
-    drawLabel('N', Offset(center.dx, 10));
-    drawLabel('E', Offset(size.width - 10, center.dy));
-    drawLabel('S', Offset(center.dx, size.height - 10));
-    drawLabel('W', Offset(10, center.dy));
-
-    final angle = _directionToRadians(direction);
-
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(angle);
-
-    final arrowPaint = Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-
-    // Shaft
-    canvas.drawLine(Offset(0, 0), Offset(0, -radius + 18), arrowPaint);
-
-    // Arrow head
-    final path = Path()
-      ..moveTo(0, -radius + 10)
-      ..lineTo(-6, -radius + 22)
-      ..lineTo(6, -radius + 22)
-      ..close();
-
-    canvas.drawPath(path, Paint()..color = Colors.blue);
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CompassPainter oldDelegate) =>
-      oldDelegate.direction != direction;
-
-  double _directionToRadians(String dir) {
-    const directions = {
-      'N': 0,
-      'NNE': 22.5,
-      'NE': 45,
-      'ENE': 67.5,
-      'E': 90,
-      'ESE': 112.5,
-      'SE': 135,
-      'SSE': 157.5,
-      'S': 180,
-      'SSW': 202.5,
-      'SW': 225,
-      'WSW': 247.5,
-      'W': 270,
-      'WNW': 292.5,
-      'NW': 315,
-      'NNW': 337.5,
-    };
-
-    final degress = directions[dir] ?? 0;
-    return degress * pi / 180;
   }
 }
