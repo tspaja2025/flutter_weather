@@ -30,7 +30,7 @@ class DailyForecastRow extends StatelessWidget {
           ),
           Icon(icon, fill: 1, color: Theme.of(context).colorScheme.primary),
           const Spacer(),
-          Text('$low°', style: Theme.of(context).textTheme.bodyMedium),
+          Text('$low °C', style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(width: 20),
           if (progressStart != null && progressEnd != null)
             SizedBox(
@@ -62,7 +62,7 @@ class DailyForecastRow extends StatelessWidget {
             ),
           const SizedBox(width: 20),
           Text(
-            '$high°',
+            '$high °C',
             style: Theme.of(
               context,
             ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),

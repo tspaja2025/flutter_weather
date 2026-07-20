@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_weather/service/weather_service.dart';
+import 'package:flutter_weather/shared/app_scaffold.dart';
 import 'package:flutter_weather/shared/city_card.dart';
 import 'package:flutter_weather/utils/weather_utils.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -8,51 +9,72 @@ class CitiesScreen extends StatefulWidget {
   const CitiesScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() => _CitiesScreenState();
+  State<CitiesScreen> createState() => _CitiesScreenState();
 }
 
 class _CitiesScreenState extends State<CitiesScreen> {
   final WeatherService _weatherService = WeatherService();
-  final List<String> _cities = ['London', 'New York', 'Tokyo'];
+  final List<String> _cities = ['New York', 'London', 'Tokyo'];
+  List<Map<String, dynamic>> _citiesData = [];
+  bool _isLoading = true;
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAllCities();
+  }
+
+  Future<void> _fetchAllCities() async {
+    try {
+      final data = await _weatherService.getAllweather(_cities);
+      setState(() {
+        _citiesData = data;
+        _isLoading = false;
+        _error = '';
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _weatherService.getAllweather(_cities),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    if (_isLoading) {
+      return AppScaffold(
+        currentIndex: 0,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        if (snapshot.hasError) {
-          return _buildErrorWidget(context, snapshot.error.toString());
-        }
-
-        final cities = snapshot.data!;
-        return _buildCitiesContent(context, cities);
-      },
-    );
-  }
-
-  Widget _buildErrorWidget(BuildContext context, String error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Symbols.error,
-            size: 64,
-            color: Theme.of(context).colorScheme.error,
+    if (_error.isNotEmpty) {
+      return AppScaffold(
+        currentIndex: 0,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $_error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchAllCities,
+                child: const Text('Retry'),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Error: $error',
-            style: Theme.of(context).textTheme.bodyLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(onPressed: () {}, child: const Text('Retry')),
-        ],
+        ),
+      );
+    }
+
+    return AppScaffold(
+      currentIndex: 2,
+      child: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(children: [_buildCitiesContent(context, _citiesData)]),
       ),
     );
   }

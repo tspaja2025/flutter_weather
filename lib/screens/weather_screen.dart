@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_weather/service/weather_service.dart';
+import 'package:flutter_weather/shared/app_scaffold.dart';
 import 'package:flutter_weather/shared/hourly_forecast_item.dart';
 import 'package:flutter_weather/shared/weather_card.dart';
 import 'package:flutter_weather/utils/weather_utils.dart';
@@ -18,51 +19,67 @@ class WeatherScreen extends StatefulWidget {
 class _WeatherScreenState extends State<WeatherScreen> {
   final WeatherService _weatherService = WeatherService();
   final String _city = 'Tampere';
+  Map<String, dynamic>? _weatherData;
+  bool _isLoading = true;
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWeatherData();
+  }
+
+  Future<void> _fetchWeatherData() async {
+    setState(() {
+      _isLoading = true;
+      _error = '';
+    });
+
+    try {
+      final data = await _weatherService.getWeatherData(_city);
+      setState(() {
+        _weatherData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _weatherService.getWeatherData(_city),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    if (_isLoading) {
+      return AppScaffold(
+        currentIndex: 0,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        if (snapshot.hasError) {
-          return _buildErrorWidget(context, snapshot.error.toString());
-        }
+    if (_error.isNotEmpty) {
+      return AppScaffold(
+        currentIndex: 0,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $_error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchWeatherData,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-        final data = snapshot.data!;
-        return _buildWeatherContent(context, data);
-      },
-    );
-  }
-
-  Widget _buildErrorWidget(BuildContext context, String error) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Symbols.error,
-            size: 64,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Error: $error',
-            style: Theme.of(context).textTheme.bodyLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-            },
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
+    return AppScaffold(
+      currentIndex: 0,
+      child: _buildWeatherContent(context, _weatherData!),
     );
   }
 
@@ -110,7 +127,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Add this
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildCurrentWeather(
             context,
@@ -160,7 +177,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }) {
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Add this
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             WeatherUtils.getWeatherIcon(condition),
@@ -177,12 +194,12 @@ class _WeatherScreenState extends State<WeatherScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'H: $maxTemp°',
+                'H: $maxTemp °C',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(width: 16),
               Text(
-                'L: $minTemp°',
+                'L: $minTemp °C',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
@@ -197,640 +214,379 @@ class _WeatherScreenState extends State<WeatherScreen> {
     List<Map<String, dynamic>> hours,
   ) {
     return WeatherCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'HOURLY FORECAST',
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-              Icon(
-                Symbols.access_time,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 120,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: hours.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 16),
-              itemBuilder: (context, index) {
-                final hour = hours[index];
-                final time = hour['time'] as String;
-                final temp = WeatherUtils.toInt(hour['temp_c']);
-                final condition = hour['condition']['text'] as String;
-                final isNow = index == 0;
+      icon: Symbols.access_time,
+      title: 'Hourly Forecast',
+      children: [
+        SizedBox(
+          height: 120,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: hours.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 16),
+            itemBuilder: (context, index) {
+              final hour = hours[index];
+              final time = hour['time'] as String;
+              final temp = WeatherUtils.toInt(hour['temp_c']);
+              final condition = hour['condition']['text'] as String;
+              final isNow = index == 0;
 
-                return HourlyForecastItem(
-                  time: isNow ? 'Now' : time.split(' ')[1],
-                  icon: WeatherUtils.getWeatherIcon(condition),
-                  temperature: '$temp°',
-                );
-              },
-            ),
+              return HourlyForecastItem(
+                time: isNow ? 'Now' : time.split(' ')[1],
+                icon: WeatherUtils.getWeatherIcon(condition),
+                temperature: '$temp °C',
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildTemperatureCard(BuildContext context, int minTemp, int maxTemp) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.thermostat,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Temperature',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '$minTemp°',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              Text(
-                '$maxTemp°',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _buildTemperatureBars(),
-          ),
-        ],
-      ),
+      icon: Symbols.thermostat,
+      title: 'Temperature',
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$minTemp °C',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            Text(
+              '$maxTemp °C',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: _buildTemperatureBars(),
+        ),
+      ],
     );
   }
 
   Widget _buildFeelsLikeCard(BuildContext context, int feelsLike) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.thermometer,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Feels like',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+      icon: Symbols.thermometer,
+      title: 'Feels like',
+      children: [
+        Container(
+          width: 92,
+          height: 92,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: .2),
+            borderRadius: BorderRadius.circular(999),
           ),
-          const SizedBox(height: 8),
-          Container(
-            width: 92,
-            height: 92,
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: .2),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '$feelsLike°',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-            ),
+          alignment: Alignment.center,
+          child: Text(
+            '$feelsLike °C',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildWindCard(BuildContext context, int windKph, String windDir) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
+      icon: Symbols.air,
+      title: 'Wind',
+      children: [
+        Text(
+          '$windKph km/h',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        Center(
+          child: Column(
             children: [
-              Icon(
-                Symbols.air,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              CustomPaint(
+                size: Size.square(60),
+                painter: CompassPainter(windDir),
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Wind',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
+              Text(windDir, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            '$windKph km/h',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          Center(
-            child: Column(
-              children: [
-                CustomPaint(
-                  size: Size.square(60),
-                  painter: CompassPainter(windDir),
-                ),
-                Text(windDir, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildHumidityCard(BuildContext context, int humidity) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.humidity_percentage,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+      icon: Symbols.humidity_percentage,
+      title: 'Humidity',
+      children: [
+        Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 90,
+              child: CustomPaint(
+                painter: GaugePainter(humidity / 100, Colors.blue),
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Humidity',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$humidity%',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                height: 90,
-                child: CustomPaint(
-                  painter: GaugePainter(humidity / 100, Colors.blue),
+                Text(
+                  WeatherUtils.getHumidityLevel(humidity),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min, // Add this
-                children: [
-                  Text(
-                    '$humidity%',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    WeatherUtils.getHumidityLevel(humidity),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildUVCard(BuildContext context, double uv) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.sunny,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'UV Index',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+      icon: Symbols.sunny,
+      title: 'UV Index',
+      children: [
+        Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 90,
+              child: CustomPaint(painter: GaugePainter2(uv / 11)),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  uv.toString(),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                height: 90,
-                child: CustomPaint(painter: GaugePainter2(uv / 11)),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min, // Add this
-                children: [
-                  Text(
-                    uv.toString(),
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    WeatherUtils.getUVLevel(uv),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+                Text(
+                  WeatherUtils.getUVLevel(uv),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildCloudCard(BuildContext context, double cloud) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.air_purifier,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Air Quality',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+      icon: Symbols.air_purifier,
+      title: 'Air Quality',
+      children: [
+        Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 90,
+              child: CustomPaint(
+                painter: GaugePainter(
+                  cloud / 100,
+                  WeatherUtils.getCloudColor(cloud),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                height: 90,
-                child: CustomPaint(
-                  painter: GaugePainter(
-                    cloud / 100,
-                    WeatherUtils.getCloudColor(cloud),
-                  ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${cloud.round()}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min, // Add this
-                children: [
-                  Text(
-                    '${cloud.round()}',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    WeatherUtils.getCloudLevel(cloud),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+                Text(
+                  WeatherUtils.getCloudLevel(cloud),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildDewPointCard(BuildContext context, int dewPoint) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.dew_point,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Dew Point',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+      icon: Symbols.dew_point,
+      title: 'Dew Point',
+      children: [
+        Center(
+          child: Text(
+            '$dewPoint °C',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              '$dewPoint°',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          height: 24,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.blue.shade100,
+                Colors.blue.shade400,
+                Colors.blue.shade700,
+              ],
             ),
+            borderRadius: BorderRadius.circular(16),
           ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            height: 24,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.blue.shade100,
-                  Colors.blue.shade400,
-                  Colors.blue.shade700,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [const Text('-5'), const Text('25')],
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [const Text('-5'), const Text('25')],
+        ),
+      ],
     );
   }
 
   Widget _buildPressureCard(BuildContext context, double pressure) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.compress,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+      icon: Symbols.compress,
+      title: 'Pressure',
+      children: [
+        Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 90,
+              child: CustomPaint(
+                painter: GaugePainter((pressure - 980) / 100, Colors.teal),
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Pressure',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${pressure.round()} mb',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                height: 90,
-                child: CustomPaint(
-                  painter: GaugePainter((pressure - 980) / 100, Colors.teal),
+                Text(
+                  WeatherUtils.getPressureLevel(pressure),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min, // Add this
-                children: [
-                  Text(
-                    '${pressure.round()} mb',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    WeatherUtils.getPressureLevel(pressure),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildVisibilityCard(BuildContext context, double visibility) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.visibility,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Visibility',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${visibility.toStringAsFixed(1)} km',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: _buildVisibilityBars(visibility),
-          ),
-        ],
-      ),
+      icon: Symbols.visibility,
+      title: 'Visibility',
+      children: [
+        Text(
+          '${visibility.toStringAsFixed(1)} km',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: _buildVisibilityBars(visibility),
+        ),
+      ],
     );
   }
 
   Widget _buildSunCard(BuildContext context, String sunrise, String sunset) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // Add this
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.wb_twilight,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Sunrise - Sunset',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '$sunrise - $sunset',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            width: double.infinity,
-            height: 60,
-            child: CustomPaint(
-              painter: SunMoonPathPainter(
-                WeatherUtils.calculateSunPosition(sunrise, sunset),
-                Colors.amber,
-              ),
+      icon: Symbols.wb_twilight,
+      title: 'Sunrise - Sunset',
+      children: [
+        Text(
+          '$sunrise - $sunset',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: double.infinity,
+          height: 60,
+          child: CustomPaint(
+            painter: SunMoonPathPainter(
+              WeatherUtils.calculateSunPosition(sunrise, sunset),
+              Colors.amber,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildMoonCard(BuildContext context, String moonrise, String moonset) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.wb_twilight_2,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Moonrise - Moonset',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '$moonrise - $moonset',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            width: double.infinity,
-            height: 60,
-            child: CustomPaint(
-              painter: SunMoonPathPainter(
-                WeatherUtils.calculateMoonPosition(moonrise, moonset),
-                Colors.grey,
-              ),
+      icon: Symbols.wb_twilight_2,
+      title: 'Moonrise - Moonset',
+      children: [
+        Text(
+          '$moonrise - $moonset',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: double.infinity,
+          height: 60,
+          child: CustomPaint(
+            painter: SunMoonPathPainter(
+              WeatherUtils.calculateMoonPosition(moonrise, moonset),
+              Colors.grey,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildMoonPhaseCard(BuildContext context, String moonPhase) {
     return WeatherCard(
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Symbols.circle,
-                fill: 1,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Moon Phase',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Icon(WeatherUtils.getMoonPhaseIcon(moonPhase), size: 72),
-          const SizedBox(width: 12),
-          Center(
-            child: Text(
-              moonPhase,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        ],
-      ),
+      title: 'Moon Phase',
+      icon: Symbols.circle,
+      children: [
+        Icon(WeatherUtils.getMoonPhaseIcon(moonPhase), size: 72),
+        const SizedBox(width: 12),
+        Center(
+          child: Text(moonPhase, style: Theme.of(context).textTheme.bodySmall),
+        ),
+      ],
     );
   }
 

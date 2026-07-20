@@ -76,7 +76,7 @@ class CityCard extends StatelessWidget {
                   right: 16,
                   top: 18,
                   child: Text(
-                    '$temperature°',
+                    '$temperature°C',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                     ),
@@ -87,9 +87,9 @@ class CityCard extends StatelessWidget {
                   bottom: 16,
                   child: Row(
                     children: [
-                      Text('H: $high°'),
+                      Text('H: $high°C'),
                       const SizedBox(width: 8),
-                      Text('L: $low°'),
+                      Text('L: $low°C'),
                     ],
                   ),
                 ),
